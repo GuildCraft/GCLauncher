@@ -4,22 +4,19 @@
 // Validation Regexes.
 const validUsername         = /^[a-zA-Z0-9_]{1,16}$/
 const basicEmail            = /^\S+@\S+\.\S+$/
-//const validEmail          = /^(([^<>()\[\]\.,;:\s@\"]+(\.[^<>()\[\]\.,;:\s@\"]+)*)|(\".+\"))@(([^<>()[\]\.,;:\s@\"]+\.)+[^<>()[\]\.,;:\s@\"]{2,})$/i
 
 // Login Elements
 const loginCancelContainer  = document.getElementById('loginCancelContainer')
 const loginCancelButton     = document.getElementById('loginCancelButton')
 const loginEmailError       = document.getElementById('loginEmailError')
 const loginUsername         = document.getElementById('loginUsername')
-const loginPasswordError    = document.getElementById('loginPasswordError')
-const loginPassword         = document.getElementById('loginPassword')
 const checkmarkContainer    = document.getElementById('checkmarkContainer')
 const loginRememberOption   = document.getElementById('loginRememberOption')
 const loginButton           = document.getElementById('loginButton')
 const loginForm             = document.getElementById('loginForm')
 
 // Control variables.
-let lu = false, lp = false
+let lu = false
 
 
 /**
@@ -51,25 +48,33 @@ function shakeError(element){
  * 
  * @param {string} value The email value.
  */
-function validateEmail(value){
-    if(value){
-        if(!basicEmail.test(value) && !validUsername.test(value)){
-            showError(loginEmailError, Lang.queryJS('login.error.invalidValue'))
-            loginDisabled(true)
-            lu = false
-        } else {
-            loginEmailError.style.opacity = 0
-            lu = true
-            if(lp){
-                loginDisabled(false)
-            }
-        }
+function validateEmail(value) {
+    let usernameRegex = /^[a-zA-Z0-9_]{4,}$/
+
+    if (usernameRegex.test(value)) {
+        loginEmailError.style.opacity = 0
+        lu = true
     } else {
+        showError(loginEmailError, Lang.queryJS('login.error.invalidValue'))
         lu = false
-        showError(loginEmailError, Lang.queryJS('login.error.requiredValue'))
-        loginDisabled(true)
     }
+
+    checkLoginButtonEnabled()
 }
+
+function checkLoginButtonEnabled() {
+    loginButton.disabled = !lu
+}
+
+loginUsername.addEventListener('focusout', (e) => {
+    validateEmail(e.target.value)
+    shakeError(loginEmailError)
+})
+
+// Validate input for email field.
+loginUsername.addEventListener('input', (e) => {
+    validateEmail(e.target.value)
+})
 
 /**
  * Validate that the password field is not empty.
@@ -95,29 +100,15 @@ loginUsername.addEventListener('focusout', (e) => {
     validateEmail(e.target.value)
     shakeError(loginEmailError)
 })
-loginPassword.addEventListener('focusout', (e) => {
-    validatePassword(e.target.value)
-    shakeError(loginPasswordError)
-})
 
 // Validate input for each field.
 loginUsername.addEventListener('input', (e) => {
     validateEmail(e.target.value)
 })
-loginPassword.addEventListener('input', (e) => {
-    validatePassword(e.target.value)
-})
 
-/**
- * Enable or disable the login button.
- * 
- * @param {boolean} v True to enable, false to disable.
- */
-function loginDisabled(v){
-    if(loginButton.disabled !== v){
-        loginButton.disabled = v
-    }
-}
+loginUsername.addEventListener('input', (e) => {
+    validateEmail(e.target.value)
+})
 
 /**
  * Enable or disable loading elements.
@@ -140,10 +131,8 @@ function loginLoading(v){
  * @param {boolean} v True to enable, false to disable.
  */
 function formDisabled(v){
-    loginDisabled(v)
     loginCancelButton.disabled = v
     loginUsername.disabled = v
-    loginPassword.disabled = v
     if(v){
         checkmarkContainer.setAttribute('disabled', v)
     } else {
@@ -167,7 +156,6 @@ function loginCancelEnabled(val){
 loginCancelButton.onclick = (e) => {
     switchView(getCurrentView(), loginViewOnCancel, 500, 500, () => {
         loginUsername.value = ''
-        loginPassword.value = ''
         loginCancelEnabled(false)
         if(loginViewCancelHandler != null){
             loginViewCancelHandler()
@@ -187,14 +175,13 @@ loginButton.addEventListener('click', () => {
     // Show loading stuff.
     loginLoading(true)
 
-    AuthManager.addMojangAccount(loginUsername.value, loginPassword.value).then((value) => {
+    AuthManager.addAccount(loginUsername.value).then((value) => {
         updateSelectedAccount(value)
         loginButton.innerHTML = loginButton.innerHTML.replace(Lang.queryJS('login.loggingIn'), Lang.queryJS('login.success'))
         $('.circle-loader').toggleClass('load-complete')
         $('.checkmark').toggle()
         setTimeout(() => {
             switchView(VIEWS.login, loginViewOnSuccess, 500, 500, async () => {
-                // Temporary workaround
                 if(loginViewOnSuccess === VIEWS.settings){
                     await prepareSettings()
                 }
@@ -202,12 +189,13 @@ loginButton.addEventListener('click', () => {
                 loginCancelEnabled(false) // Reset this for good measure.
                 loginViewCancelHandler = null // Reset this for good measure.
                 loginUsername.value = ''
-                loginPassword.value = ''
                 $('.circle-loader').toggleClass('load-complete')
                 $('.checkmark').toggle()
                 loginLoading(false)
                 loginButton.innerHTML = loginButton.innerHTML.replace(Lang.queryJS('login.success'), Lang.queryJS('login.login'))
                 formDisabled(false)
+                lu = false
+                checkLoginButtonEnabled()
             })
         }, 1000)
     }).catch((displayableError) => {
@@ -227,8 +215,9 @@ loginButton.addEventListener('click', () => {
         setOverlayHandler(() => {
             formDisabled(false)
             toggleOverlay(false)
+            lu = false
+            checkLoginButtonEnabled()
         })
         toggleOverlay(true)
     })
-
 })
