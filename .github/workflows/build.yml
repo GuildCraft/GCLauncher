@@ -72,12 +72,13 @@ jobs:
           echo "::set-output name=commit_sha::$(git rev-parse HEAD)"
           
       - name: Push changes
-        uses: ad-m/github-push-action@v0.6.0
+        uses: ad-m/github-push-action@v1.2.1
         with:
           github_token: ${{ github.token }}
 
       - name: Github Automatic Release
         uses: "marvinpinto/action-automatic-releases@latest"
         with:
+          draft: true
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
           prerelease: false
