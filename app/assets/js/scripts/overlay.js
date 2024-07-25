@@ -334,9 +334,9 @@ function populateAccountListings(){
     const accounts = Array.from(Object.keys(accountsObj), v=>accountsObj[v])
     let htmlString = ''
     for(let i=0; i<accounts.length; i++){
-        htmlString += `<button class="accountListing" uuid="${accounts[i].uuid}" ${!i && !overlayContainer.hasAttribute("popup") ? 'selected' : ''}>
-            <img src="https://mc-heads.net/head/${accounts[i].uuid}/40">
-            <div class="accountListingName">${accounts[i].displayName}</div>
+        htmlString += `<button class="accountListing" uuid="${accounts[i].uuid}" ${!i && !overlayContainer.hasAttribute('popup') ? 'selected' : ''}>
+            <img src="https://mc-heads.net/head/${accounts[i].displayName}/40">
+            <div class="accountListingName">${accounts[i].displayName} (${accounts[i].type === 'microsoft' ? '<a style="color:green;bold:true;">Premium</a>' : '<a style="color:red;bold:true;">Offline</a>'})</div>
         </button>`
     }
     document.getElementById('accountSelectListScrollable').innerHTML = htmlString

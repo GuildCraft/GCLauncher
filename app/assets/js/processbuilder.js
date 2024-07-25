@@ -7,8 +7,8 @@ const { getMojangOS, isLibraryCompatible, mcVersionAtLeast }  = require('helios-
 const { Type }              = require('helios-distribution-types')
 const os                    = require('os')
 const path                  = require('path')
-const remote = require('@electron/remote');
-const win = remote.getCurrentWindow();
+const remote = require('@electron/remote')
+const win = remote.getCurrentWindow()
 
 const ConfigManager         = require('./configmanager')
 
@@ -528,6 +528,7 @@ class ProcessBuilder {
                             break
                         case 'user_type':
                             val = this.authUser.type === 'microsoft' ? 'msa' : 'mojang'
+                            console.log(this.authUser.type)
                             break
                         case 'version_type':
                             val = this.vanillaManifest.type
